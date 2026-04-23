@@ -4,6 +4,26 @@ A scalable URL shortener built using distributed system principles with Node.js,
 
 ---
 
+## 🧩 Architecture Diagram
+
+![Architecture](./assets/architecture.png)
+
+---
+
+## 🎯 Why This Project?
+
+This project demonstrates real-world distributed system concepts:
+
+* Horizontal scaling
+* Distributed ID generation
+* Caching strategies
+* Database design for high throughput systems
+* Fault tolerance and trade-offs
+
+Built to simulate production-grade system design similar to URL shortening services.
+
+---
+
 ## 📌 Features
 
 * 🔗 Generate short URLs
@@ -11,7 +31,16 @@ A scalable URL shortener built using distributed system principles with Node.js,
 * 📦 Distributed ID generation using Zookeeper
 * 🧠 Tunable consistency (Cassandra QUORUM)
 * 🔄 Load balancing using Nginx
-* 🐳 Fully containerized (Docker)
+* 🐳 Fully containerized using Docker
+
+---
+
+## 💡 Highlights
+
+* Multiple app instances using Docker scaling
+* Zookeeper-based range allocation (no duplicate IDs)
+* Cassandra QUORUM consistency for reliability
+* Redis caching for low latency reads
 
 ---
 
@@ -19,12 +48,12 @@ A scalable URL shortener built using distributed system principles with Node.js,
 
 ### Components
 
-* **App Layer** → Node.js (multiple instances)
-* **Cache Layer** → Redis
-* **Database** → Cassandra (distributed)
-* **Coordination** → Zookeeper (ID range allocation)
-* **Load Balancer** → Nginx
-* **Orchestration** → Docker Compose
+* App Layer → Node.js (multiple instances)
+* Cache Layer → Redis
+* Database → Cassandra
+* Coordination → Zookeeper
+* Load Balancer → Nginx
+* Containerization → Docker
 
 ---
 
@@ -33,7 +62,7 @@ A scalable URL shortener built using distributed system principles with Node.js,
 ### 🔹 URL Shortening
 
 1. Client sends long URL (`POST /shorten`)
-2. App fetches ID range from Zookeeper (if needed)
+2. App fetches ID range from Zookeeper
 3. Generates unique ID locally
 4. Stores mapping in Cassandra
 5. Returns short URL
@@ -59,12 +88,6 @@ A scalable URL shortener built using distributed system principles with Node.js,
 GET /
 ```
 
-Response:
-
-```text
-Uptime: <seconds>, Host: <container-id>
-```
-
 ---
 
 ### Create Short URL
@@ -75,7 +98,7 @@ POST /shorten
 
 ---
 
-### Redirect to Original URL
+### Redirect
 
 ```http
 GET /redirect/:code
@@ -83,7 +106,7 @@ GET /redirect/:code
 
 ---
 
-### Zookeeper Counter Check
+### Zookeeper Counter
 
 ```http
 GET /zoo
@@ -91,7 +114,7 @@ GET /zoo
 
 ---
 
-### Allocate ID Range
+### Allocate Range
 
 ```http
 GET /zoo/id
@@ -101,9 +124,7 @@ GET /zoo/id
 
 ## 🧠 Database Design (Cassandra)
 
-### Tables
-
-#### 1️⃣ url_by_id
+### url_by_id
 
 ```sql
 id bigint PRIMARY KEY,
@@ -114,7 +135,7 @@ created_at timestamp
 
 ---
 
-#### 2️⃣ url_by_short_code
+### url_by_short_code
 
 ```sql
 short_code text PRIMARY KEY,
@@ -127,45 +148,25 @@ created_at timestamp
 
 ## ⚖️ Consistency Strategy
 
-Cassandra client configuration:
-
 ```js
 queryOptions: {
   consistency: cassandra.types.consistencies.quorum
 }
 ```
 
-### 🔹 Meaning
+### Why QUORUM?
 
-* Read → QUORUM
-* Write → QUORUM
-
-### 🔹 Why QUORUM?
-
-* ✅ Strong consistency
-* ✅ Tolerates 1 node failure (RF=3)
-* ⚖️ Balanced latency vs consistency
-
----
-
-## 🧠 ID Generation Strategy
-
-* Uses Zookeeper for **range allocation**
-* Each node generates IDs locally
-* Avoids duplicate IDs across distributed nodes
-
-### Trade-off
-
-* ⚠️ Range loss possible on node failure
-* ✅ Guarantees uniqueness
+* Strong consistency
+* Handles node failure
+* Balanced performance
 
 ---
 
 ## ⚡ Caching Strategy
 
-* Redis used for fast reads
-* Reduces load on Cassandra
-* Ideal for hot URLs (viral traffic)
+* Redis for fast reads
+* Reduces Cassandra load
+* Improves latency
 
 ---
 
@@ -173,16 +174,31 @@ queryOptions: {
 
 * Horizontal scaling supported
 * Multiple app instances (`--scale app=3`)
-* Distributed DB (Cassandra cluster)
-* Stateless app design
+* Stateless architecture
 
 ---
 
-## ⚠️ Potential Bottlenecks
+## ⚠️ Trade-offs
 
-* Zookeeper (single instance)
-* Hot partitions if cache misses occur
-* Cassandra startup latency
+* Range loss possible on node crash
+* Zookeeper dependency
+* Eventual consistency in distributed setup
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+  controllers/
+  services/
+  db/
+  config/
+routes/
+docker-compose.yml
+nginx.conf
+README.md
+```
 
 ---
 
@@ -208,19 +224,17 @@ docker-compose up --build --scale app=3
 
 ## 🔐 Security
 
-* `.env` not committed
-* Credentials kept outside repo
-* Sensitive configs ignored via `.gitignore`
+* `.env` is not committed
+* Secrets are ignored via `.gitignore`
 
 ---
 
 ## 🚀 Future Improvements
 
-* Replace Zookeeper with Snowflake ID generator
-* Add rate limiting
-* Add click analytics (with write sharding)
+* Snowflake ID generation
+* Rate limiting
+* Analytics system
 * Multi-region deployment
-* Zookeeper clustering
 
 ---
 
