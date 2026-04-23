@@ -1,5 +1,10 @@
 # 🚀 TinyURL - Distributed URL Shortener System
 
+**Latest Release:** v1.0.0
+👉 [View Release](https://github.com/AkashFullStackDev/tinyurl-system-design/releases/tag/v1.0.0)
+
+Built to demonstrate real-world distributed system design concepts (similar to TinyURL/Bitly).
+
 A scalable URL shortener built using distributed system principles with Node.js, Cassandra, Redis, and Zookeeper.
 
 ---
@@ -73,10 +78,11 @@ Built to simulate production-grade system design similar to URL shortening servi
 
 1. User hits short URL (`GET /redirect/:code`)
 2. Check Redis cache
-3. If hit → return immediately
-4. If miss → fetch from Cassandra
-5. Cache result in Redis
-6. Redirect to original URL
+
+   * Cache hit → return immediately
+   * Cache miss → fetch from Cassandra
+3. Cache result in Redis
+4. Redirect to original URL
 
 ---
 
@@ -88,15 +94,11 @@ Built to simulate production-grade system design similar to URL shortening servi
 GET /
 ```
 
----
-
 ### Create Short URL
 
 ```http
 POST /shorten
 ```
-
----
 
 ### Redirect
 
@@ -104,15 +106,11 @@ POST /shorten
 GET /redirect/:code
 ```
 
----
-
 ### Zookeeper Counter
 
 ```http
 GET /zoo
 ```
-
----
 
 ### Allocate Range
 
@@ -132,8 +130,6 @@ short_code text,
 long_url text,
 created_at timestamp
 ```
-
----
 
 ### url_by_short_code
 
@@ -157,16 +153,16 @@ queryOptions: {
 ### Why QUORUM?
 
 * Strong consistency
-* Handles node failure
-* Balanced performance
+* Handles node failures
+* Balanced latency vs reliability
 
 ---
 
 ## ⚡ Caching Strategy
 
-* Redis for fast reads
+* Redis used for fast reads
 * Reduces Cassandra load
-* Improves latency
+* Improves response latency
 
 ---
 
@@ -174,15 +170,34 @@ queryOptions: {
 
 * Horizontal scaling supported
 * Multiple app instances (`--scale app=3`)
-* Stateless architecture
+* Stateless architecture enables easy scaling
+
+---
+
+## 📈 How This System Handles Scale
+
+* Stateless app instances allow horizontal scaling
+* Redis reduces database load for frequent reads
+* Cassandra handles high write throughput
+* Zookeeper prevents ID collisions across nodes
+* Nginx distributes traffic efficiently
 
 ---
 
 ## ⚠️ Trade-offs
 
-* Range loss possible on node crash
-* Zookeeper dependency
+* Range loss possible on node crash (accepted for uniqueness)
+* Dependency on Zookeeper for ID allocation
 * Eventual consistency in distributed setup
+
+---
+
+## 🛡️ Failure Handling
+
+* App node failure → No data loss (stateless design)
+* Cassandra node failure → Handled via replication
+* Redis failure → Cache miss fallback to DB
+* Zookeeper failure → New ID allocation pauses (existing nodes continue)
 
 ---
 
@@ -204,13 +219,13 @@ README.md
 
 ## 🛠️ Tech Stack
 
-* Node.js
-* Express.js
-* Cassandra
-* Redis
-* Zookeeper
-* Nginx
-* Docker
+* Node.js → Application layer
+* Express.js → API handling
+* Cassandra → Distributed database (high write scalability)
+* Redis → Caching layer (low latency reads)
+* Zookeeper → Distributed coordination (ID range allocation)
+* Nginx → Load balancing
+* Docker → Containerization
 
 ---
 
@@ -231,10 +246,17 @@ docker-compose up --build --scale app=3
 
 ## 🚀 Future Improvements
 
-* Snowflake ID generation
+* Snowflake-based ID generation
 * Rate limiting
-* Analytics system
+* Analytics system (click tracking)
 * Multi-region deployment
+* Zookeeper clustering
+
+---
+
+## 📦 Version
+
+Current stable release: **v1.0.0**
 
 ---
 
