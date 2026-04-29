@@ -1,4 +1,4 @@
-const cassandraClient = require('../src/db/cassandra');
+const cassandraClient = require('../db/cassandra');
 
 async function sleep(ms) {
     return new Promise(res => setTimeout(res, ms));
@@ -29,17 +29,45 @@ async function initCassandra() {
                     id bigint PRIMARY KEY,
                     short_code text,
                     long_url text,
-                    created_at timestamp
+                    created_at timestamp,
+                    expires_at timestamp,
+                    user_id text,
+                    is_active boolean
                 );
             `);
 
-            // create table
+             // create table
             await cassandraClient.execute(`
                 CREATE TABLE IF NOT EXISTS url_by_short_code (
                     short_code text PRIMARY KEY,
                     id bigint,
                     long_url text,
-                    created_at timestamp
+                    created_at timestamp,
+                    expires_at timestamp,
+                    user_id text,
+                    is_active boolean
+                );
+            `);
+
+             // create table
+            await cassandraClient.execute(`
+                CREATE TABLE IF NOT EXISTS clicks_by_code_day (
+                    short_code text,
+                    day date,
+                    event_time timestamp,
+                    ip text,
+                    user_agent text,
+                    PRIMARY KEY ((short_code, day), event_time)
+                ) WITH CLUSTERING ORDER BY (event_time DESC);
+            `);
+
+             // create table
+            await cassandraClient.execute(`
+                CREATE TABLE IF NOT EXISTS clicks_count_by_code_day (
+                    short_code text,
+                    day date,
+                    count counter,
+                    PRIMARY KEY (short_code, day)
                 );
             `);
 

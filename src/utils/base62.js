@@ -1,10 +1,13 @@
 const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 exports.encode = (num) => {
+    num = BigInt(num);
     let result = "";
-    while (num > 0) {
-        result = chars[num % 62] + result;
-        num = Math.floor(num / 62);
+    let base = 62n;
+    while (num > 0n) {
+        const remainder = num % base;
+        result = chars[Number(remainder)] + result;
+        num = num / base;
     }
     return result;
 };
