@@ -1,4 +1,4 @@
-const redisClient = require('../src/db/redis');
+const redisClient = require('../db/redis');
 
 async function initRedis() {
     await redisClient.connect();

@@ -1,49 +1,50 @@
 const service = require('../services/urlService');
 
 exports.shorten = async (req, res) => {
-    const { longUrl } = req.body;
+    try {
 
-    if (!longUrl) {
-        let resObj = {
-            code: 400,
-            status: "failed",
-            message: "longUrl is required.",
-            data: {}
+        const { longUrl, expiresInSeconds, customAlias } = req.body;
+
+        if (!longUrl) {
+            let resObj = {
+                code: 400,
+                status: "failed",
+                message: "longUrl is required.",
+                data: {}
+            }
+            return res.status(400).json(resObj);
         }
-        return res.status(400).json(resObj);
-    }
 
-    const code = await service.createShortUrl(longUrl);
+        const data = await service.createShortUrl(longUrl, expiresInSeconds, customAlias);
 
-    if (code) {
         let resObj = {
             code: 201,
             status: "success",
             message: "short url generated successfully.",
-            data: {
-                shortUrl: `http://localhost:8081/redirect/${code}`
-            }
+            data: data
         }
         res.status(201).json(resObj);
-    } else {
-        let resObj = {
-            code: 500,
+    }
+    catch (err) {
+        res.status(400).json({
+            code: 400,
             status: "failed",
-            message: "Internal server error.",
-            data: {}
-        }
-        res.status(201).json(resObj);
+            message: err.message
+        });
     }
 
 };
 
 exports.redirectByShortCode = async (req, res) => {
     const code = req.params.code;
-    let url = await service.getLongUrlByShortCode(code);
-    if (!url) return res.status(404).send("Not found");
-    if (!url.startsWith('http')) {
-        url = 'https://' + url;
-    }
+    let result = await service.getLongUrlByShortCode(code, req);
+    if (!result) return res.status(404).send("Not found");
+    if (result.expired) return res.status(410).send("Link expired");
+
+    let url = result.url;
+
+    if (!url.startsWith('http')) url = 'https://' + url;
+
     res.redirect(url);
 };
 

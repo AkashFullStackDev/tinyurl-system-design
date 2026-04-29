@@ -2,13 +2,6 @@ version: '3.8'
 
 services:
 
-  zookeeper:
-    image: zookeeper
-    restart: always
-    volumes:
-    - zookeeper_data:/data
-    - zookeeper_datalog:/datalog
-
   redis:
     image: redis
     command: ["redis-server", "--appendonly", "yes"]
@@ -68,13 +61,14 @@ services:
   app:
     build: .
     depends_on:
-      - zookeeper
       - redis
       - cassandra1
     expose:
       - "3000"
     env_file:
       - .env
+    environment:
+      - SERVER_ID=${SERVER_ID}
     restart: always
 
   nginx:
@@ -90,6 +84,4 @@ volumes:
   cassandra_data1:
   cassandra_data2:
   cassandra_data3:
-  zookeeper_data:
-  zookeeper_datalog:
   redis_data:
